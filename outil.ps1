@@ -209,8 +209,102 @@ function Save-SecurePassword {
     Write-Host "Mot de passe sécurisé enregistré pour $User dans $Path"
 }
 
+function Show-Documentation {
+
+    Write-Host ""
+    Write-Host "================ DOCUMENTATION DU SCRIPT ================="
+    Write-Host ""
+
+    Write-Host "UTILISATION DES OPTIONS DU MENU"
+    Write-Host "--------------------------------"
+
+    Write-Host "Option 1 : Générer un mot de passe"
+    Write-Host "Permet de générer un mot de passe sécurisé."
+    Write-Host "L'utilisateur choisit la longueur du mot de passe."
+    Write-Host "Le mot de passe contient des majuscules, minuscules, chiffres et caractères spéciaux."
+    Write-Host ""
+
+    Write-Host "Option 2 : Tester la force d'un mot de passe"
+    Write-Host "Permet d'analyser la robustesse d'un mot de passe."
+    Write-Host "Le script attribue un score et indique si le mot de passe est : Weak, Medium, Strong ou Very Strong."
+    Write-Host ""
+
+    Write-Host "Option 3 : Générer une liste de mots de passe"
+    Write-Host "Permet de générer automatiquement un mot de passe pour plusieurs utilisateurs."
+    Write-Host "Le script lit un fichier contenant une liste d'utilisateurs."
+    Write-Host "Chaque utilisateur reçoit un mot de passe sécurisé."
+    Write-Host ""
+
+    Write-Host "Option 4 : Exporter les mots de passe"
+    Write-Host "Permet d'exporter les mots de passe générés dans un fichier CSV."
+    Write-Host "Le fichier peut ensuite être ouvert avec Excel."
+    Write-Host ""
+
+    Write-Host "Option 5 : Déposer au coffre-fort"
+    Write-Host "Permet d'enregistrer un mot de passe de manière sécurisée."
+    Write-Host "Le mot de passe est chiffré avec SecureString avant d'être stocké."
+    Write-Host ""
+
+    Write-Host ""
+    Write-Host "FONCTIONS UTILISÉES DANS LE SCRIPT"
+    Write-Host "-----------------------------------"
+    Write-Host ""
+
+    Write-Host "Get-SecureRandomIndex"
+    Write-Host "Cette fonction génère un nombre aléatoire sécurisé."
+    Write-Host "Elle utilise RandomNumberGenerator de .NET au lieu de Get-Random."
+    Write-Host "Elle permet de choisir un indice aléatoire dans une liste de caractères."
+    Write-Host ""
+
+    Write-Host "Get-SecureRandomChar"
+    Write-Host "Cette fonction sélectionne un caractère aléatoire sécurisé dans une chaîne."
+    Write-Host "Elle utilise Get-SecureRandomIndex pour déterminer la position du caractère."
+    Write-Host ""
+
+    Write-Host "New-Password"
+    Write-Host "Cette fonction génère un mot de passe sécurisé."
+    Write-Host "Elle garantit qu'il contient différents types de caractères."
+    Write-Host "Elle utilise RandomNumberGenerator pour améliorer la sécurité."
+    Write-Host ""
+
+    Write-Host "Test-PasswordStrength"
+    Write-Host "Cette fonction analyse la robustesse d'un mot de passe."
+    Write-Host "Elle vérifie :"
+    Write-Host "- la longueur"
+    Write-Host "- les majuscules"
+    Write-Host "- les minuscules"
+    Write-Host "- les chiffres"
+    Write-Host "- les caractères spéciaux"
+    Write-Host "Elle calcule ensuite un score."
+    Write-Host ""
+
+    Write-Host "New-PasswordList"
+    Write-Host "Cette fonction lit un fichier contenant des utilisateurs."
+    Write-Host "Elle génère un mot de passe pour chacun d'eux."
+    Write-Host "Les résultats sont stockés dans une variable globale."
+    Write-Host ""
+
+    Write-Host "Export-Passwords"
+    Write-Host "Cette fonction exporte les mots de passe dans un fichier CSV."
+    Write-Host "Elle utilise la commande PowerShell Export-Csv."
+    Write-Host ""
+
+    Write-Host "Save-SecurePassword"
+    Write-Host "Cette fonction stocke un mot de passe dans un coffre-fort."
+    Write-Host "Le mot de passe est converti en SecureString puis chiffré."
+    Write-Host ""
+
+    Write-Host "Show-Menu"
+    Write-Host "Cette fonction affiche le menu interactif."
+    Write-Host "Elle permet à l'utilisateur de choisir les différentes options du script."
+    Write-Host ""
+
+    Write-Host "==========================================================="
+    Write-Host ""
+}
+
 # ================================
-# Fonction utilitaire d'affichage
+# Étape 7 : Menu interactif
 # ================================
 function Show-Results {
     if ($Global:PasswordResults -and $Global:PasswordResults.Count -gt 0) {
@@ -221,9 +315,6 @@ function Show-Results {
     }
 }
 
-# ================================
-# Étape 7 : Menu interactif
-# ================================
 function Show-Menu {
     do {
         Write-Host ""
@@ -233,12 +324,14 @@ function Show-Menu {
         Write-Host "3 - Générer une liste de mots de passe"
         Write-Host "4 - Exporter les mots de passe"
         Write-Host "5 - Déposer au coffre-fort"
-        Write-Host "6 - Quitter"
+        Write-Host "6 - Documentation"
+        Write-Host "7 - Quitter"
         Write-Host ""
 
         $choice = Read-Host "Choisissez une option"
 
         switch ($choice) {
+
             "1" {
                 $Length = [int](Read-Host "Longueur du mot de passe")
                 $Password = New-Password -Length $Length -Uppercase -Lowercase -Numbers -SpecialChars
@@ -265,18 +358,15 @@ function Show-Menu {
 
             "5" {
                 $User = Read-Host "Nom de l'utilisateur"
-                $Password = Read-Host "Mot de passe à sécuriser"
-                $Path = Read-Host "Chemin du fichier coffre-fort (Entrée = secure_passwords.txt)"
-
-                if ([string]::IsNullOrWhiteSpace($Path)) {
-                    Save-SecurePassword -User $User -Password $Password
-                }
-                else {
-                    Save-SecurePassword -User $User -Password $Password -Path $Path
-                }
+                $Password = Read-Host "Mot de passe"
+                Save-SecurePassword -User $User -Password $Password
             }
 
             "6" {
+                Show-Documentation
+            }
+
+            "7" {
                 Write-Host "Fin du programme."
             }
 
@@ -285,7 +375,7 @@ function Show-Menu {
             }
         }
 
-    } while ($choice -ne "6")
+    } while ($choice -ne "7")
 }
 
 # Lancement du menu
