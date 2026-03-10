@@ -148,27 +148,36 @@ function Test-PasswordStrength {
 function New-PasswordList {
     param (
         [string]$UserFile,
-        [int]$Length = 14
+        [int]$Length = 7,
+        [int]$Count
     )
 
     if (-not (Test-Path $UserFile)) {
         throw "Le fichier $UserFile est introuvable."
     }
 
-    $users = Get-Content $UserFile
+    if ($Length -lt 7) {
+        $Length = 7
+    }
+
+    $users = Get-Content $UserFile | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($Count -gt $users.Count) {
+        throw "Le fichier contient seulement $($users.Count) utilisateur(s)."
+    }
+
     $results = @()
 
-    foreach ($user in $users) {
-        if (-not [string]::IsNullOrWhiteSpace($user)) {
-            $Password = New-Password -Length $Length -Uppercase -Lowercase -Numbers -SpecialChars
-            $analysis = Test-PasswordStrength -Password $Password
+    for ($i = 0; $i -lt $Count; $i++) {
+        $user = $users[$i]
+        $Password = New-StrongPassword -Length $Length
+        $analysis = Test-PasswordStrength -Password $Password
 
-            $results += [PSCustomObject]@{
-                User     = $user
-                Password = $Password
-                Strength = $analysis.Strength
-                Score    = $analysis.Score
-            }
+        $results += [PSCustomObject]@{
+            User     = $user
+            Password = $Password
+            Strength = $analysis.Strength
+            Score    = $analysis.Score
         }
     }
 
@@ -192,6 +201,23 @@ function New-StrongPassword {
     } while ($analysis.Score -lt 5)
 
     return $Password
+}
+
+function Write-PasswordsToSourceFile {
+    param (
+        [string]$UserFile
+    )
+
+    if (-not $Global:PasswordResults -or $Global:PasswordResults.Count -eq 0) {
+        throw "Aucune donnée à écrire."
+    }
+
+    $lines = foreach ($item in $Global:PasswordResults) {
+        "$($item.User) : $($item.Password)"
+    }
+
+    Set-Content -Path $UserFile -Value $lines -Encoding UTF8
+    Write-Host "Les mots de passe ont été écrits dans le fichier source : $UserFile"
 }
 
 # ================================
